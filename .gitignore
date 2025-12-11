@@ -1,6 +1,6 @@
 # Virtual environments
 .venv/
-.venv_docinsight/
+.venv_doc/
 venv/
 ENV/
 .env
@@ -8,3 +8,4 @@ ENV/
 __pycache__/
 *.pyc
 .vscode/
+
