@@ -1,0 +1,10 @@
+# Virtual environments
+.venv/
+.venv_docinsight/
+venv/
+ENV/
+.env
+.DS_Store
+__pycache__/
+*.pyc
+.vscode/
