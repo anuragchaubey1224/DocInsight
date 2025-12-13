@@ -1,11 +1,151 @@
-# Virtual environments
+# ==========================
+# Python
+# ==========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pdb
+*.egg-info/
+*.egg
+*.log
+*.pyc
+
+# ==========================
+# Virtual Environments
+# ==========================
 .venv/
 .venv_doc/
 venv/
 ENV/
-.env
-.DS_Store
-__pycache__/
-*.pyc
-.vscode/
+env/
+*.venv
 
+# ==========================
+# Environment & Secrets
+# ==========================
+.env
+.env.*
+!.env.example
+
+# ==========================
+# IDE / Editors
+# ==========================
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-*
+.project
+.classpath
+.settings/
+
+# ==========================
+# macOS
+# ==========================
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# ==========================
+# Database Files
+# ==========================
+*.db
+*.sqlite
+*.sqlite3
+dev.db
+docinsight.db
+
+# ==========================
+# Data Directories (uploads/index)
+# ==========================
+backend/data/uploads/*
+backend/data/index/*
+!backend/data/uploads/.gitkeep
+!backend/data/index/.gitkeep
+
+# Alternative: Ignore entire folders
+# backend/data/
+
+# ==========================
+# AI Model Cache & Large Files
+# ==========================
+*.bin
+*.pt
+*.pth
+*.ckpt
+*.h5
+*.pb
+*.onnx
+*.safetensors
+models/
+.cache/
+.transformers_cache/
+.sentence_transformers_cache/
+
+# HuggingFace cache
+~/.cache/huggingface/
+
+# ==========================
+# Logs
+# ==========================
+logs/
+*.log
+*.out
+
+# ==========================
+# Testing & Coverage
+# ==========================
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+*.cover
+
+# ==========================
+# Build & Distribution
+# ==========================
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# ==========================
+# Documentation Builds
+# ==========================
+docs/_build/
+site/
+
+# ==========================
+# Jupyter Notebooks
+# ==========================
+.ipynb_checkpoints/
+*.ipynb
+
+# ==========================
+# Temporary Files
+# ==========================
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
+
+# ==========================
+# Large dependencies (node_modules if any)
+# ==========================
+node_modules/
+
+# ==========================
+# Generated/frozen requirements
+# ==========================
+requirements_frozen.txt
+
+# ==========================
+# OS Specific
+# ==========================
+Thumbs.db
+Desktop.ini
