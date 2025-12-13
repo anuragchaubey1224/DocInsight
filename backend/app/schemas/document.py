@@ -43,3 +43,12 @@ class DocumentUploadFullResponse(BaseModel):
     raw_word_count: int
     clean_word_count: int
     message: str
+
+
+class DocumentSummaryResponse(BaseModel):
+    """Response schema for document summarization."""
+    short_summary: str
+    medium_summary: str
+    detailed_summary: list[str]
+    
+    model_config = ConfigDict(from_attributes=True)
