@@ -81,7 +81,7 @@ backend/data/index/*
 *.pb
 *.onnx
 *.safetensors
-models/
+#models/
 .cache/
 .transformers_cache/
 .sentence_transformers_cache/
