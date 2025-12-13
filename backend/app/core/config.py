@@ -30,8 +30,8 @@ class Settings(BaseSettings):
     # Project root = DocInsight/
     BASE_DIR: Path = Path(__file__).resolve().parents[3]
 
-    UPLOAD_DIR: Path = BASE_DIR / "backend" / "app" / "data" / "uploads"
-    INDEX_DIR: Path = BASE_DIR / "backend" / "app" / "data" / "index"
+    UPLOAD_DIR: Path = BASE_DIR / "backend"  / "data" / "uploads"
+    INDEX_DIR: Path = BASE_DIR / "backend" / "data" / "index"
 
     # --------------------------------
     # ML Models
