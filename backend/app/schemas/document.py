@@ -26,3 +26,20 @@ class DocumentMeta(DocumentRead):
     index_path: Optional[str] = None
     
     model_config = ConfigDict(from_attributes=True)
+
+
+class DocumentUploadResponse(BaseModel):
+    """Response schema for document upload."""
+    doc_id: int
+    filename: str
+    word_count: int
+    message: str
+
+
+class DocumentUploadFullResponse(BaseModel):
+    """Response schema for document upload with cleaning."""
+    doc_id: int
+    filename: str
+    raw_word_count: int
+    clean_word_count: int
+    message: str
