@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import get_settings
-from app.routes import auth
+from app.routes import auth, documents, summarize, ask
 
 
 def create_application() -> FastAPI:
@@ -30,6 +30,9 @@ def create_application() -> FastAPI:
     # Include Routers
     # --------------------------------
     app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
+    app.include_router(documents.router, prefix="/documents", tags=["Documents"])
+    app.include_router(summarize.router, prefix="/summarize", tags=["Summarization"])
+    app.include_router(ask.router, tags=["Question Answering"])
 
     # --------------------------------
     # Root Endpoint

@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.config import get_settings
-from app.dependencies.auth import get_current_user
+from app.dependencies.auth import get_current_user, get_current_user_or_dev_user  # DEV MODE ONLY
 from app.models.user import User
 from app.models.document import Document
 from app.schemas.document import DocumentSummaryResponse
@@ -33,7 +33,7 @@ settings = get_settings()
 @router.post("/{doc_id}", response_model=DocumentSummaryResponse)
 def summarize_document(
     doc_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_or_dev_user),  # DEV MODE ONLY - Change back to get_current_user for production
     db: Session = Depends(get_db)
 ):
     """

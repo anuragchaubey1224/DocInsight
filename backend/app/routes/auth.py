@@ -7,6 +7,7 @@ Authentication routes: signup, login, and user info.
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -14,7 +15,7 @@ from app.core.security import hash_password, verify_password, create_access_toke
 from app.dependencies.auth import get_current_user
 from app.models.user import User
 from app.schemas.user import UserCreate, UserRead
-from app.schemas.auth import Token, LoginRequest
+from app.schemas.auth import Token
 
 router = APIRouter()
 
@@ -63,14 +64,16 @@ async def signup(
 
 @router.post("/login", response_model=Token)
 async def login(
-    login_data: LoginRequest,
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     db: Annotated[Session, Depends(get_db)]
 ):
     """
     Authenticate user and return JWT access token.
     
+    OAuth2 compatible endpoint. Use email in 'username' field.
+    
     Args:
-        login_data: Login credentials (email, password)
+        form_data: OAuth2 form with username (email) and password
         db: Database session
         
     Returns:
@@ -79,11 +82,11 @@ async def login(
     Raises:
         HTTPException: 401 if credentials are invalid
     """
-    # Fetch user by email
-    user = db.query(User).filter(User.email == login_data.email).first()
+    # Fetch user by email (username field contains email)
+    user = db.query(User).filter(User.email == form_data.username).first()
     
     # Validate user exists and password is correct
-    if not user or not verify_password(login_data.password, user.hashed_password):
+    if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",

@@ -10,8 +10,9 @@ from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.dependencies.auth import get_current_user
+from app.dependencies.auth import get_current_user, get_current_user_or_dev_user  # DEV MODE ONLY
 from app.models.user import User
+from app.models.document import Document
 from app.schemas.document import DocumentUploadFullResponse
 from app.services.document_service import (
     save_upload_file,
@@ -22,6 +23,7 @@ from app.services.document_service import (
 )
 from app.services.extractor import extract_text_auto
 from app.utils.text_cleaner import clean_text
+from app.services.retriever import index_document, is_document_indexed, get_index_stats
 
 router = APIRouter()
 
@@ -32,7 +34,7 @@ ALLOWED_EXTENSIONS = {".pdf", ".docx", ".txt"}
 @router.post("/upload", response_model=DocumentUploadFullResponse, status_code=status.HTTP_201_CREATED)
 async def upload_document(
     file: UploadFile = File(...),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user_or_dev_user),  # DEV MODE ONLY - Change back to get_current_user for production
     db: Session = Depends(get_db)
 ):
     """
@@ -138,3 +140,115 @@ async def upload_document(
         clean_word_count=clean_word_count,
         message="Upload + cleaning successful"
     )
+
+
+@router.post("/embed/{doc_id}")
+async def embed_document(
+    doc_id: int,
+    current_user: User = Depends(get_current_user_or_dev_user),  # DEV MODE ONLY - Change back to get_current_user for production
+    db: Session = Depends(get_db)
+):
+    """
+    Create FAISS index for a document (EXPLICIT INDEXING STEP).
+    
+    This is a deliberate, separate step from upload/summarization.
+    Must be called before using POST /ask/{doc_id}.
+    
+    Workflow:
+    1. Validate document exists and user owns it
+    2. Check if already indexed (idempotent)
+    3. If not indexed: generate embeddings + build FAISS index
+    4. Return index metadata
+    
+    Args:
+        doc_id: Document ID to index
+        current_user: Authenticated user
+        db: Database session
+        
+    Returns:
+        Index status and metadata
+        
+    Raises:
+        404: Document not found or not owned by user
+        400: Document has no cleaned text
+        500: Indexing failed
+        
+    Example Response:
+        {
+            "status": "indexed",
+            "doc_id": 42,
+            "chunks": 12,
+            "embedding_model": "all-mpnet-base-v2",
+            "dimension": 768,
+            "message": "Document indexed successfully"
+        }
+    """
+    # Step 1: Validate document exists and user owns it
+    document = db.query(Document).filter(
+        Document.id == doc_id,
+        Document.user_id == current_user.id
+    ).first()
+    
+    if not document:
+        print(f"⚠️ Embed failed: Document {doc_id} not found for user {current_user.id}")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Document {doc_id} not found or you don't have access"
+        )
+    
+    # Step 2: Check if already indexed (idempotent operation)
+    if is_document_indexed(current_user.id, doc_id):
+        stats = get_index_stats(current_user.id, doc_id)
+        print(f"ℹ️ Document {doc_id} already indexed ({stats['num_vectors']} chunks)")
+        return {
+            "status": "already_indexed",
+            "doc_id": doc_id,
+            "chunks": stats['num_vectors'],
+            "embedding_model": "all-mpnet-base-v2",
+            "dimension": stats['dimension'],
+            "message": "Document is already indexed"
+        }
+    
+    # Step 3: Verify cleaned text exists
+    from pathlib import Path
+    from app.core.config import get_settings
+    settings = get_settings()
+    
+    cleaned_path = Path(settings.UPLOAD_DIR) / str(current_user.id) / str(doc_id) / "cleaned.txt"
+    if not cleaned_path.exists():
+        print(f"⚠️ Embed failed: No cleaned text for document {doc_id}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Document {doc_id} has no cleaned text. Please upload it first."
+        )
+    
+    # Step 4: Index the document (create embeddings + FAISS index)
+    try:
+        print(f"🔧 Starting indexing for document {doc_id} (user {current_user.id})...")
+        index_document(current_user.id, doc_id)
+        
+        # Get stats after indexing
+        stats = get_index_stats(current_user.id, doc_id)
+        print(f"✅ Document {doc_id} indexed successfully ({stats['num_vectors']} chunks)")
+        
+        return {
+            "status": "indexed",
+            "doc_id": doc_id,
+            "chunks": stats['num_vectors'],
+            "embedding_model": "all-mpnet-base-v2",
+            "dimension": stats['dimension'],
+            "message": f"Document indexed successfully with {stats['num_vectors']} chunks"
+        }
+        
+    except ValueError as e:
+        print(f"❌ Indexing failed for document {doc_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Failed to index document: {str(e)}"
+        )
+    except Exception as e:
+        print(f"❌ Indexing failed for document {doc_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to index document: {str(e)}"
+        )

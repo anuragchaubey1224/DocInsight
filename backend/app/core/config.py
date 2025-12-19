@@ -25,18 +25,24 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./dev.db"
 
     # --------------------------------
+    # Environment Mode
+    # --------------------------------
+    # DEV MODE ONLY - REMOVE BEFORE PRODUCTION
+    ENV: str = "development"  # Set to "production" before deployment
+
+    # --------------------------------
     # Directories
     # --------------------------------
     # Project root = DocInsight/
     BASE_DIR: Path = Path(__file__).resolve().parents[3]
 
-    UPLOAD_DIR: Path = BASE_DIR / "backend"  / "data" / "uploads"
-    INDEX_DIR: Path = BASE_DIR / "backend" / "data" / "index"
+    UPLOAD_DIR: Path = BASE_DIR / "backend" / "app" / "data" / "uploads"
+    INDEX_DIR: Path = BASE_DIR / "backend" / "app" / "data" / "index"
 
     # --------------------------------
     # ML Models
     # --------------------------------
-    SUMMARIZER_MODEL: str = "t5-small"
+    SUMMARIZER_MODEL: str = "google/flan-t5-base"
     EMBEDDING_MODEL: str = "sentence-transformers/all-mpnet-base-v2"
 
     # --------------------------------
