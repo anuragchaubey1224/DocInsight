@@ -27,6 +27,11 @@ env/
 .env
 .env.*
 !.env.example
+*.key
+*.pem
+*.cert
+secrets.json
+config.local.*
 
 # ==========================
 # IDE / Editors
@@ -62,13 +67,15 @@ docinsight.db
 # ==========================
 # Data Directories (uploads/index)
 # ==========================
-backend/data/uploads/*
-backend/data/index/*
-!backend/data/uploads/.gitkeep
-!backend/data/index/.gitkeep
+# User uploads and FAISS indexes (regeneratable, contains user data)
+backend/app/data/uploads/*
+backend/app/data/index/*
+!backend/app/data/uploads/.gitkeep
+!backend/app/data/index/.gitkeep
 
-# Alternative: Ignore entire folders
-# backend/data/
+# Legacy/alternative data locations (if any)
+backend/data/
+backend/backend/
 
 # ==========================
 # AI Model Cache & Large Files
@@ -149,3 +156,27 @@ requirements_frozen.txt
 # ==========================
 Thumbs.db
 Desktop.ini
+# ==========================
+# Test files and directories
+# ==========================
+tests/
+backend/tests/
+test_*.py
+*_test.py
+
+# ==========================
+# Documentation (generated/temporary)
+# ==========================
+docs/
+!README.md
+
+# ==========================
+# Backend logs
+# ==========================
+backend.log
+backend/*.log
+
+# ==========================
+# Documentation exports
+# ==========================
+docs/*.pdf
