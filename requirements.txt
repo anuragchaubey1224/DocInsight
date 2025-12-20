@@ -13,6 +13,8 @@ python-multipart==0.0.20
 sqlalchemy==2.0.36
 pydantic==2.12.5
 pydantic-settings==2.7.0
+psycopg2-binary==2.9.9
+
 
 # ===== Authentication & Security =====
 python-jose[cryptography]==3.3.0
