@@ -30,9 +30,10 @@ pdf2image==1.17.0
 Pillow==12.0.0
 
 # ===== Machine Learning - PyTorch =====
-torch==2.6.0
-torchvision==0.21.0
-torchaudio==2.6.0
+torch==2.0.1
+torchvision==0.15.2
+torchaudio==2.0.2
+
 
 
 # ===== Embeddings & Vector Database =====
