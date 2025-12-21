@@ -35,6 +35,9 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Install other dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Verify critical packages are installed
+RUN python -c "import transformers; import torch; import sentence_transformers; import faiss; print('✅ All critical packages installed')"
+
 # ===== STAGE 2: Runtime =====
 FROM python:3.10-slim
 
@@ -71,7 +74,8 @@ COPY .env.example /app/.env.example
 RUN mkdir -p \
     /app/backend/app/data/uploads \
     /app/backend/app/data/index \
-    /tmp/.cache
+    /tmp/.cache && \
+    chmod -R 777 /app/backend/app/data /tmp/.cache
 
 # Health check for Railway
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \

@@ -3,8 +3,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import logging
+from contextlib import asynccontextmanager
 
 from app.core.config import get_settings
+from app.core.database import Base, engine
 from app.routes import auth, documents, summarize, ask
 
 # Configure logging
@@ -15,12 +17,36 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Startup and shutdown events for the application.
+    Ensures database tables are created on first deployment.
+    """
+    # Startup
+    logger.info("🚀 Starting DocInsight API...")
+    try:
+        # Create database tables if they don't exist
+        logger.info("Initializing database tables...")
+        Base.metadata.create_all(bind=engine)
+        logger.info("✅ Database tables initialized successfully")
+    except Exception as e:
+        logger.error(f"❌ Database initialization failed: {e}")
+        # Don't crash the app - Railway might not have DB ready yet
+    
+    yield
+    
+    # Shutdown
+    logger.info("Shutting down DocInsight API...")
+
+
 def create_application() -> FastAPI:
     settings = get_settings()
 
     app = FastAPI(
         title=settings.PROJECT_NAME,
         version="1.0.0",
+        lifespan=lifespan,
     )
 
     # --------------------------------
