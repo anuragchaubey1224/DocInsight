@@ -60,7 +60,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     HF_HOME=/tmp/.cache/huggingface \
     TRANSFORMERS_CACHE=/tmp/.cache/transformers \
     TORCH_HOME=/tmp/.cache/torch \
-    TESSDATA_PREFIX=/usr/share/tesseract-ocr/5/tessdata
+    TESSDATA_PREFIX=/usr/share/tesseract-ocr/5/tessdata \
+    PYTHONPATH=/app/backend
 
 # Copy application code
 COPY backend/ /app/backend/
