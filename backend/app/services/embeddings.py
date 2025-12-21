@@ -78,6 +78,30 @@ def load_embedding_model() -> SentenceTransformer:
         return _embedding_model
 
 
+def unload_model():
+    """
+    Unload embedding model from memory (Railway memory optimization).
+    
+    This is called before loading the summarizer to free ~80MB of RAM.
+    The model will be automatically reloaded when needed.
+    
+    Used only in production (Railway) to prevent OOM crashes.
+    In development, models stay loaded for better performance.
+    """
+    global _embedding_model
+    
+    with _model_lock:
+        if _embedding_model is not None:
+            logger.info("Unloading embedding model to free memory...")
+            _embedding_model = None
+            
+            # Force garbage collection
+            import gc
+            gc.collect()
+            
+            logger.info("Embedding model unloaded successfully")
+
+
 def generate_embeddings(chunks: List[str], batch_size: int = 8) -> np.ndarray:
     """
     Generate embeddings for text chunks.

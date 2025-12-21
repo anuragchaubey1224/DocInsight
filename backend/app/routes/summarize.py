@@ -13,6 +13,8 @@ Design principles:
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+import logging
+import gc
 
 from app.core.database import get_db
 from app.core.config import get_settings
@@ -25,9 +27,11 @@ from app.services.summarizer import (
     save_summaries,
     load_summaries
 )
+from app.services.embeddings import unload_model as unload_embedding_model, load_embedding_model
 
 router = APIRouter(tags=["Summarization"])
 settings = get_settings()
+logger = logging.getLogger(__name__)
 
 
 @router.post("/{doc_id}", response_model=DocumentSummaryResponse)
@@ -118,21 +122,42 @@ def summarize_document(
             detail="cleaned.txt is empty. Cannot generate summaries."
         )
     
+    # ===== CRITICAL: Memory Management for Railway (512MB limit) =====
+    # Unload embedding model before loading summarizer to prevent OOM
+    if settings.ENV == "production":
+        logger.info("🧹 [MEMORY] Unloading embedding model before summarization...")
+        try:
+            unload_embedding_model()
+            gc.collect()  # Force garbage collection
+            logger.info("✅ [MEMORY] Embedding model unloaded, memory freed")
+        except Exception as e:
+            logger.warning(f"⚠️  [MEMORY] Failed to unload embedding: {e}")
+    
     # Generate summaries
     try:
-        print(f"🔄 Generating summaries for doc {doc_id} (user {current_user.id})")
+        logger.info(f"🔄 Generating summaries for doc {doc_id} (user {current_user.id})")
         summaries = generate_all_summaries(cleaned_text)
         
         # Save summaries to disk (caching)
         save_summaries(current_user.id, doc_id, summaries)
         
-        print(f"✅ Summaries generated and cached for doc {doc_id}")
+        logger.info(f"✅ Summaries generated and cached for doc {doc_id}")
         
         return DocumentSummaryResponse(**summaries)
     
     except Exception as e:
-        print(f"❌ Error generating summaries: {e}")
+        logger.error(f"❌ Error generating summaries: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error generating summaries: {str(e)}"
         )
+    
+    finally:
+        # ===== CRITICAL: Reload embedding model for future QA queries =====
+        if settings.ENV == "production":
+            logger.info("🔄 [MEMORY] Reloading embedding model after summarization...")
+            try:
+                load_embedding_model()  # Pre-warm for next QA request
+                logger.info("✅ [MEMORY] Embedding model reloaded successfully")
+            except Exception as e:
+                logger.warning(f"⚠️  [MEMORY] Failed to reload embedding: {e} (will load on demand)")
