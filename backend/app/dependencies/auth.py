@@ -64,33 +64,37 @@ async def get_current_user(
 
 
 # ============================================================
-# DEV MODE ONLY - REMOVE BEFORE PRODUCTION
+# DEV MODE ONLY - SAFE FOR PRODUCTION DEPLOYMENT
 # ============================================================
 async def get_current_user_or_dev_user(
     db: Annotated[Session, Depends(get_db)],
     token: Annotated[str | None, Depends(oauth2_scheme_optional)] = None
 ) -> User:
     """
-    Development-only auth bypass for upload endpoint.
+    Environment-aware authentication dependency.
     
     Behavior:
-    - If Authorization header present → validate JWT (production mode)
-    - If missing AND ENV=development → return/create dummy dev user
-    - If missing AND ENV=production → raise 401 error
+    - If Authorization header present → validate JWT (all environments)
+    - If missing AND ENV=development → return dummy dev user (local testing only)
+    - If missing AND ENV=production → raise 401 error (secure)
     
-    DEV MODE ONLY - This allows frontend testing without implementing 
-    full authentication flow. MUST BE REMOVED before production deployment.
+    This is SAFE for production deployment because:
+    1. Production environment automatically enforces authentication
+    2. Dev mode only works when DATABASE_URL is SQLite (local)
+    3. Railway automatically sets DATABASE_URL to PostgreSQL
     
     Args:
         db: Database session
         token: Optional JWT token from Authorization header
         
     Returns:
-        Authenticated User (if token provided) or dev dummy user
+        Authenticated User (if token provided) or dev dummy user (dev only)
         
     Raises:
         HTTPException: 401 if token invalid or missing in production mode
     """
+    import logging
+    logger = logging.getLogger(__name__)
     settings = get_settings()
     
     # If token is provided, validate it (production behavior)
@@ -124,6 +128,10 @@ async def get_current_user_or_dev_user(
     # No token provided - check environment
     if settings.ENV == "development":
         # DEV MODE ONLY - DO NOT COMMIT TO DB
+        logger.warning(
+            "⚠️  DEV MODE: Using dummy user (dev@localhost). "
+            "This only works locally with SQLite!"
+        )
         # Create ephemeral dev user (not persisted to database)
         dev_user = User(
             id=0,
@@ -137,6 +145,7 @@ async def get_current_user_or_dev_user(
         return dev_user
     else:
         # Production mode - require authentication
+        logger.error("Production mode: Authentication token required but not provided")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication required",

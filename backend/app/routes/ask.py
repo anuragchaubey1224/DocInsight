@@ -1,7 +1,7 @@
 # backend/app/routes/ask.py
 
 """
-STEP 7: Question Answering API Endpoint (Extractive QA).
+ Question Answering API Endpoint (Extractive QA).
 
 Provides POST /ask/{doc_id} endpoint with:
 - Document-first extractive QA pipeline
