@@ -225,15 +225,15 @@ async def ask_question(
             detail=f"Failed to embed query: {str(e)}"
         )
     
-    # Validate embedding shape
-    if query_embedding.shape != (768,):
+    # Validate embedding shape (support both 384d and 768d models)
+    if query_embedding.shape not in [(384,), (768,)]:
         logger.error(f"Invalid query embedding shape: {query_embedding.shape}")
         raise HTTPException(
             status_code=500,
-            detail=f"Invalid query embedding shape: {query_embedding.shape}"
+            detail=f"Invalid query embedding dimension. Expected 384 or 768, got {query_embedding.shape}"
         )
     
-    logger.debug("Query embedded ✓")
+    logger.debug(f"Query embedded ✓ (dimension={query_embedding.shape[0]})")
     
     # ========================================
     # STEP 4: GET DOCUMENT CHUNKS

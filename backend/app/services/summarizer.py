@@ -274,24 +274,47 @@ def summarize_text(
     instruction: str = None
 ) -> str:
     """
-    Generate summary for a single text chunk using T5.
+    Generate summary for a single text chunk using T5 or BART.
+    
+    Automatically detects model type and adjusts input format:
+    - T5 models: Require "summarize:" prefix
+    - BART models: No prefix needed
     
     Args:
         text: Text to summarize
         max_length: Maximum summary length in tokens
         min_length: Minimum summary length in tokens
-        tokenizer: T5 tokenizer
-        model: T5 model
+        tokenizer: T5 or BART tokenizer
+        model: T5 or BART model
         instruction: Optional specialized instruction for summary style
         
     Returns:
         Generated summary
     """
-    # Prepare input with T5 prefix and optional instruction
-    if instruction:
-        input_text = f"summarize: {instruction} {text}"
+    # Detect model type from config
+    model_name = settings.SUMMARIZER_MODEL.lower()
+    is_t5 = "t5" in model_name
+    is_bart = "bart" in model_name
+    
+    # Prepare input based on model type
+    if is_t5:
+        # T5 requires "summarize:" prefix
+        if instruction:
+            input_text = f"summarize: {instruction} {text}"
+        else:
+            input_text = f"summarize: {text}"
+    elif is_bart:
+        # BART doesn't need prefix (use instruction if provided)
+        if instruction:
+            input_text = f"{instruction} {text}"
+        else:
+            input_text = text
     else:
-        input_text = f"summarize: {text}"
+        # Default to T5 format for unknown models
+        if instruction:
+            input_text = f"summarize: {instruction} {text}"
+        else:
+            input_text = f"summarize: {text}"
     
     # Tokenize
     inputs = tokenizer(

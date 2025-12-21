@@ -75,7 +75,7 @@ def get_settings() -> Settings:
         
         # AUTO-OPTIMIZE: Use memory-efficient models for Railway free tier
         settings.EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"  # 80MB vs 420MB
-        settings.SUMMARIZER_MODEL = "google/flan-t5-small"  # Already optimal
+        settings.SUMMARIZER_MODEL = "sshleifer/distilbart-cnn-6-6"  # 60MB vs 250MB (T5-small)
     
     # Validate production config
     if settings.ENV == "production":
