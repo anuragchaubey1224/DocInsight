@@ -1,0 +1,99 @@
+# ========================================
+# Docker Ignore File
+# Excludes unnecessary files from build
+# Saves ~200MB+ in final image
+# ========================================
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+.DS_Store
+
+# Data files (IMPORTANT - saves 100s of MB)
+backend/app/data/uploads/
+backend/app/data/index/
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# Tests (not needed in production)
+backend/tests/
+tests/
+**/test_*.py
+**/*_test.py
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Frontend (not needed in backend image)
+frontend/
+node_modules/
+package.json
+package-lock.json
+*.config.js
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+logs/
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Jupyter notebooks
+*.ipynb
+.ipynb_checkpoints/
+
+# Model cache (will be downloaded on first run)
+.cache/
+*.pt
+*.pth
+*.bin
+models/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Verification scripts
+verify_*.py
+*.sh

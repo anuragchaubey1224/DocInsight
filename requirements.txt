@@ -27,10 +27,12 @@ pytesseract>=0.3
 pdf2image>=1.16
 Pillow>=9.5,<11
 
-# ---- ML CORE (CRITICAL PINS) ----
-torch==2.0.1
-torchvision==0.15.2
-torchaudio==2.0.2
+# ---- ML CORE ----
+# NOTE: PyTorch CPU-only versions installed via Dockerfile
+# This saves ~2GB by excluding CUDA/GPU libraries:
+#   torch==2.0.1+cpu (installed in Dockerfile)
+#   torchvision==0.15.2+cpu (installed in Dockerfile)
+#   torchaudio==2.0.2+cpu (installed in Dockerfile)
 
 # ---- Embeddings ----
 sentence-transformers>=2.2,<3.4
