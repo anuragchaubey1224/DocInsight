@@ -67,9 +67,9 @@ def load_embedding_model() -> SentenceTransformer:
                 dim = _embedding_model.get_sentence_embedding_dimension()
                 logger.info(f"Embedding model loaded: dimension={dim}")
                 
-                # Validate dimension
-                if dim != 768:
-                    raise RuntimeError(f"Expected dimension 768, got {dim}")
+                # Validate dimension (support both MiniLM-384d and MPNet-768d)
+                if dim not in [384, 768]:
+                    raise RuntimeError(f"Expected dimension 384 or 768, got {dim}")
                 
             except Exception as e:
                 logger.error(f"Failed to load embedding model: {e}")
@@ -128,9 +128,12 @@ def generate_embeddings(chunks: List[str], batch_size: int = 8) -> np.ndarray:
                 f"Embedding count mismatch: expected {len(chunks)}, got {embeddings.shape[0]}"
             )
         
-        if embeddings.shape[1] != 768:
+        # Support both 384d (MiniLM) and 768d (MPNet) dimensions
+        dim = embeddings.shape[1]
+        expected_dims = [384, 768]
+        if dim not in expected_dims:
             raise RuntimeError(
-                f"Embedding dimension mismatch: expected 768, got {embeddings.shape[1]}"
+                f"Embedding dimension mismatch: expected {expected_dims}, got {dim}"
             )
         
         logger.debug(f"Embeddings generated: shape={embeddings.shape}")

@@ -36,15 +36,20 @@ _embedding_model: Optional[SentenceTransformer] = None
 _qa_model_lock = threading.Lock()
 _embedding_lock = threading.Lock()
 
+# Import settings to use auto-optimized models
+from app.core.config import get_settings
+
+settings = get_settings()
+
 # T5 Configuration (for optional simplification)
-QA_MODEL_NAME = "google/flan-t5-base"
+QA_MODEL_NAME = settings.SUMMARIZER_MODEL  # Uses auto-optimized model (flan-t5-small in prod)
 MAX_INPUT_LENGTH = 512  # T5 max input
 MAX_OUTPUT_LENGTH = 120  # Reasonable answer length
 DEVICE = "cpu"  # CPU-only to prevent MPS crashes
 
 # Extractive QA Configuration
 # CRITICAL: Use SAME model as document indexing (embeddings.py) for consistency
-EMBEDDING_MODEL_NAME = "sentence-transformers/all-mpnet-base-v2"
+EMBEDDING_MODEL_NAME = settings.EMBEDDING_MODEL  # Uses auto-optimized model (MiniLM in prod)
 MIN_SENTENCE_SIMILARITY = 0.18  # Lowered threshold for better recall
 MAX_SENTENCES_PER_ANSWER = 5    # Maximum 5 sentences (flexible length)
 MIN_SENTENCES_PER_ANSWER = 1    # Allow single-sentence answers

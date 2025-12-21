@@ -50,8 +50,10 @@ def build_faiss_index(embeddings: np.ndarray) -> faiss.Index:
     if embeddings.ndim != 2:
         raise ValueError(f"Expected 2D array, got shape {embeddings.shape}")
     
-    if embeddings.shape[1] != 768:
-        raise ValueError(f"Expected dimension 768, got {embeddings.shape[1]}")
+    # Support both 384d (MiniLM) and 768d (MPNet) dimensions
+    dim = embeddings.shape[1]
+    if dim not in [384, 768]:
+        raise ValueError(f"Expected dimension 384 or 768, got {dim}")
     
     if embeddings.shape[0] == 0:
         raise ValueError("Cannot build index from empty embeddings")
@@ -234,8 +236,10 @@ def index_document(user_id: int, doc_id: int) -> Dict:
     if embeddings.ndim != 2:
         raise RuntimeError(f"Expected 2D embeddings, got shape {embeddings.shape}")
     
-    if embeddings.shape[1] != 768:
-        raise RuntimeError(f"Expected dimension 768, got {embeddings.shape[1]}")
+    # Support both 384d (MiniLM) and 768d (MPNet) dimensions
+    dim = embeddings.shape[1]
+    if dim not in [384, 768]:
+        raise RuntimeError(f"Expected dimension 384 or 768, got {dim}")
     
     if len(chunks) != embeddings.shape[0]:
         raise RuntimeError(
@@ -244,7 +248,7 @@ def index_document(user_id: int, doc_id: int) -> Dict:
     
     num_vectors = embeddings.shape[0]
     
-    logger.info(f"Embeddings validated: {num_vectors} vectors, dimension=768")
+    logger.info(f"Embeddings validated: {num_vectors} vectors, dimension={dim}")
     
     # Step 3: Build FAISS index
     try:
@@ -264,7 +268,7 @@ def index_document(user_id: int, doc_id: int) -> Dict:
     metadata = {
         "doc_id": doc_id,
         "vectors": num_vectors,
-        "dimension": 768,
+        "dimension": dim,
         "status": "indexed",
         "index_path": str(index_path)
     }
@@ -321,8 +325,10 @@ def retrieve_similar_chunks(
     if not isinstance(query_embedding, np.ndarray):
         raise ValueError(f"Expected numpy array, got {type(query_embedding)}")
     
-    if query_embedding.shape != (768,):
-        raise ValueError(f"Expected shape (768,), got {query_embedding.shape}")
+    # Support both 384d (MiniLM) and 768d (MPNet) dimensions
+    dim = query_embedding.shape[0] if query_embedding.ndim == 1 else query_embedding.shape[1]
+    if dim not in [384, 768]:
+        raise ValueError(f"Expected dimension 384 or 768, got {dim}")
     
     # Validate chunks count
     if len(chunks) != index.ntotal:

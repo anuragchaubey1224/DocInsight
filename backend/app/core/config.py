@@ -72,6 +72,10 @@ def get_settings() -> Settings:
     # Auto-detect environment (Railway sets DATABASE_URL with postgresql://)
     if settings.DATABASE_URL.startswith("postgresql://") or settings.DATABASE_URL.startswith("postgres://"):
         settings.ENV = "production"
+        
+        # AUTO-OPTIMIZE: Use memory-efficient models for Railway free tier
+        settings.EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"  # 80MB vs 420MB
+        settings.SUMMARIZER_MODEL = "google/flan-t5-small"  # Already optimal
     
     # Validate production config
     if settings.ENV == "production":
