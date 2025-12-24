@@ -73,10 +73,6 @@ def get_settings() -> Settings:
     # Auto-detect environment (Railway sets DATABASE_URL with postgresql://)
     if settings.DATABASE_URL.startswith("postgresql://") or settings.DATABASE_URL.startswith("postgres://"):
         settings.ENV = "production"
-        
-        # AUTO-OPTIMIZE: Use memory-efficient models for Railway free tier
-        settings.EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"  # 80MB vs 420MB
-        settings.SUMMARIZER_MODEL = "sshleifer/distilbart-cnn-6-6"  # 60MB vs 250MB (T5-small)
     
     # Auto-detect Hugging Face Spaces environment
     if os.getenv("HUGGINGFACE_SPACES"):
@@ -84,9 +80,9 @@ def get_settings() -> Settings:
         # Use HF Spaces persistent storage for database (if using SQLite)
         if settings.DATABASE_URL.startswith("sqlite://"):
             settings.DATABASE_URL = "sqlite:////data/docinsight.db"
-        # Use memory-efficient models for HF Spaces
-        settings.EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
-        settings.SUMMARIZER_MODEL = "sshleifer/distilbart-cnn-6-6"
+        # NOTE: Using same high-quality models as local development
+        # - EMBEDDING_MODEL: sentence-transformers/all-mpnet-base-v2 (420MB)
+        # - SUMMARIZER_MODEL: google/flan-t5-base (250MB)
     
     # Validate production config
     if settings.ENV == "production":
