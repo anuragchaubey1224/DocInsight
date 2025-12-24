@@ -47,10 +47,10 @@ class Settings(BaseSettings):
     INDEX_DIR: Path = Path("/data/index") if os.getenv("HUGGINGFACE_SPACES") else BASE_DIR / "backend" / "app" / "data" / "index"
 
     # --------------------------------
-    # ML Models
+    # ML Models (Same as local for consistent quality)
     # --------------------------------
-    SUMMARIZER_MODEL: str = "google/flan-t5-base"
-    EMBEDDING_MODEL: str = "sentence-transformers/all-mpnet-base-v2"
+    SUMMARIZER_MODEL: str = "t5-small"  # 60MB, fast, good quality
+    EMBEDDING_MODEL: str = "sentence-transformers/all-mpnet-base-v2"  # 420MB, high quality
 
     # --------------------------------
     # OCR / System Paths (Auto-detected)

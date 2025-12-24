@@ -45,6 +45,7 @@ faiss-cpu>=1.7,<1.8
 transformers>=4.30,<4.39
 tokenizers>=0.13,<0.16
 safetensors>=0.3
+sentencepiece>=0.1.99
 
 # ---- Utils ----
 numpy>=1.23,<1.26
