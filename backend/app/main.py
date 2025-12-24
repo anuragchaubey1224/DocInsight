@@ -24,7 +24,18 @@ async def lifespan(app: FastAPI):
     Ensures database tables are created on first deployment.
     """
     # Startup
+    settings = get_settings()
     logger.info("🚀 Starting DocInsight API...")
+    
+    # Ensure directories exist (HF Spaces persistent storage or local)
+    try:
+        import os
+        settings.UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+        settings.INDEX_DIR.mkdir(parents=True, exist_ok=True)
+        logger.info(f"✅ Directories initialized: {settings.UPLOAD_DIR}, {settings.INDEX_DIR}")
+    except Exception as e:
+        logger.warning(f"⚠️ Directory initialization warning: {e}")
+    
     try:
         # Create database tables if they don't exist
         logger.info("Initializing database tables...")

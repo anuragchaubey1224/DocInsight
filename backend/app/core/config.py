@@ -42,8 +42,9 @@ class Settings(BaseSettings):
     # Project root = DocInsight/
     BASE_DIR: Path = Path(__file__).resolve().parents[3]
 
-    UPLOAD_DIR: Path = BASE_DIR / "backend" / "app" / "data" / "uploads"
-    INDEX_DIR: Path = BASE_DIR / "backend" / "app" / "data" / "index"
+    # Use HF Spaces persistent storage if available, otherwise use local paths
+    UPLOAD_DIR: Path = Path("/data/uploads") if os.getenv("HUGGINGFACE_SPACES") else BASE_DIR / "backend" / "app" / "data" / "uploads"
+    INDEX_DIR: Path = Path("/data/index") if os.getenv("HUGGINGFACE_SPACES") else BASE_DIR / "backend" / "app" / "data" / "index"
 
     # --------------------------------
     # ML Models
@@ -77,6 +78,16 @@ def get_settings() -> Settings:
         settings.EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"  # 80MB vs 420MB
         settings.SUMMARIZER_MODEL = "sshleifer/distilbart-cnn-6-6"  # 60MB vs 250MB (T5-small)
     
+    # Auto-detect Hugging Face Spaces environment
+    if os.getenv("HUGGINGFACE_SPACES"):
+        settings.ENV = "production"
+        # Use HF Spaces persistent storage for database (if using SQLite)
+        if settings.DATABASE_URL.startswith("sqlite://"):
+            settings.DATABASE_URL = "sqlite:////data/docinsight.db"
+        # Use memory-efficient models for HF Spaces
+        settings.EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+        settings.SUMMARIZER_MODEL = "sshleifer/distilbart-cnn-6-6"
+    
     # Validate production config
     if settings.ENV == "production":
         if settings.SECRET_KEY == "dev-secret-key-change-in-production":
@@ -100,9 +111,5 @@ def get_settings() -> Settings:
         
         if not settings.TESSERACT_CMD:
             settings.TESSERACT_CMD = "tesseract"  # Fallback to PATH
-    
-    # Ensure directories exist
-    settings.UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-    settings.INDEX_DIR.mkdir(parents=True, exist_ok=True)
 
     return settings
