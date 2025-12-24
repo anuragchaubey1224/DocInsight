@@ -55,3 +55,6 @@ requests>=2.30
 tqdm>=4.64
 regex>=2023.6
 duckduckgo-search>=5.0
+
+# ---- API Enhancements ----
+slowapi>=0.1.9

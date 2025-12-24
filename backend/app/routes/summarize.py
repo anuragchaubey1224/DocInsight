@@ -28,13 +28,17 @@ from app.services.summarizer import (
     load_summaries
 )
 from app.services.embeddings import unload_model as unload_embedding_model, load_embedding_model
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 router = APIRouter(tags=["Summarization"])
 settings = get_settings()
 logger = logging.getLogger(__name__)
+limiter = Limiter(key_func=get_remote_address)
 
 
 @router.post("/{doc_id}", response_model=DocumentSummaryResponse)
+@limiter.limit("30/hour")  # 30 summarizations per hour
 def summarize_document(
     doc_id: int,
     current_user: User = Depends(get_current_user_or_dev_user),  # DEV MODE ONLY - Change back to get_current_user for production

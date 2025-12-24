@@ -24,14 +24,18 @@ from app.services.document_service import (
 from app.services.extractor import extract_text_auto
 from app.utils.text_cleaner import clean_text
 from app.services.retriever import index_document, is_document_indexed, get_index_stats
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 router = APIRouter()
+limiter = Limiter(key_func=get_remote_address)
 
 # Supported file extensions
 ALLOWED_EXTENSIONS = {".pdf", ".docx", ".txt"}
 
 
 @router.post("/upload", response_model=DocumentUploadFullResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit("20/hour")  # 20 uploads per hour
 async def upload_document(
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_user_or_dev_user),  # DEV MODE ONLY - Change back to get_current_user for production

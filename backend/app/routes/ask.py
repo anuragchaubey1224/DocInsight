@@ -31,11 +31,14 @@ from app.services.qa import (
     compute_confidence  # For web fallback only
 )
 from app.services.websearch import get_web_context_for_question
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 logger = logging.getLogger(__name__)
 
 settings = get_settings()
 router = APIRouter()
+limiter = Limiter(key_func=get_remote_address)
 
 # Confidence threshold for web fallback
 CONFIDENCE_THRESHOLD = 0.70
@@ -152,6 +155,7 @@ class AskResponse(BaseModel):
 
 
 @router.post("/ask/{doc_id}", response_model=AskResponse)
+@limiter.limit("50/hour")  # 50 questions per hour
 async def ask_question(
     doc_id: int,
     request: AskRequest,

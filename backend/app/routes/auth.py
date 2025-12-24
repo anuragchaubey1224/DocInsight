@@ -16,11 +16,15 @@ from app.dependencies.auth import get_current_user
 from app.models.user import User
 from app.schemas.user import UserCreate, UserRead
 from app.schemas.auth import Token
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 router = APIRouter()
+limiter = Limiter(key_func=get_remote_address)
 
 
 @router.post("/signup", response_model=UserRead, status_code=status.HTTP_201_CREATED)
+@limiter.limit("5/hour")  # 5 signups per hour per IP
 async def signup(
     user_data: UserCreate,
     db: Annotated[Session, Depends(get_db)]
@@ -63,6 +67,7 @@ async def signup(
 
 
 @router.post("/login", response_model=Token)
+@limiter.limit("10/minute")  # 10 login attempts per minute
 async def login(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     db: Annotated[Session, Depends(get_db)]

@@ -1,8 +1,13 @@
 # backend/app/main.py
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 import logging
+import time
 from contextlib import asynccontextmanager
 
 from app.core.config import get_settings
@@ -15,6 +20,9 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
+
+# Initialize rate limiter
+limiter = Limiter(key_func=get_remote_address, default_limits=["200/hour"])
 
 
 @asynccontextmanager
@@ -58,6 +66,53 @@ def create_application() -> FastAPI:
         title=settings.PROJECT_NAME,
         version="1.0.0",
         lifespan=lifespan,
+        description="AI-powered document intelligence API with RAG Q&A and summarization",
+        docs_url="/docs",
+        redoc_url="/redoc",
+    )
+
+    # --------------------------------
+    # Rate Limiter Setup
+    # --------------------------------
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+    # --------------------------------
+    # Middleware: Request Logging
+    # --------------------------------
+    @app.middleware("http")
+    async def log_requests(request: Request, call_next):
+        """Log all incoming requests and their response times."""
+        start_time = time.time()
+        
+        # Log request
+        logger.info(
+            f"→ {request.method} {request.url.path} "
+            f"client={request.client.host if request.client else 'unknown'}"
+        )
+        
+        # Process request
+        response = await call_next(request)
+        
+        # Log response
+        process_time = time.time() - start_time
+        logger.info(
+            f"← {request.method} {request.url.path} "
+            f"status={response.status_code} time={process_time:.3f}s"
+        )
+        
+        # Add custom headers
+        response.headers["X-Process-Time"] = str(process_time)
+        
+        return response
+
+    # --------------------------------
+    # Middleware: Compression (GZip)
+    # --------------------------------
+    app.add_middleware(
+        GZipMiddleware,
+        minimum_size=1000,  # Only compress responses > 1KB
+        compresslevel=6     # Balance between speed and compression (1-9)
     )
 
     # --------------------------------

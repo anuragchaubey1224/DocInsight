@@ -1,13 +1,37 @@
 # backend/app/schemas/document.py
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from datetime import datetime
 from typing import Optional
+import re
 
 
 class DocumentBase(BaseModel):
     """Base document schema with shared fields."""
-    filename: str
+    filename: str = Field(
+        ...,
+        min_length=1,
+        max_length=255,
+        description="Document filename",
+        examples=["document.pdf"]
+    )
+    
+    @field_validator('filename')
+    @classmethod
+    def validate_filename(cls, v: str) -> str:
+        """Validate filename format and security."""
+        # Remove any path traversal attempts
+        if '..' in v or '/' in v or '\\' in v:
+            raise ValueError('Invalid filename: path traversal not allowed')
+        
+        # Check for valid file extension
+        allowed_extensions = ['.pdf', '.docx', '.txt', '.png', '.jpg', '.jpeg']
+        if not any(v.lower().endswith(ext) for ext in allowed_extensions):
+            raise ValueError(
+                f'Invalid file type. Allowed types: {", ".join(allowed_extensions)}'
+            )
+        
+        return v
 
 
 class DocumentRead(DocumentBase):
