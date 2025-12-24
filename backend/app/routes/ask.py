@@ -157,9 +157,9 @@ class AskResponse(BaseModel):
 @router.post("/ask/{doc_id}", response_model=AskResponse)
 @limiter.limit("50/hour")  # 50 questions per hour
 async def ask_question(
-    http_request: Request,
+    request: Request,
     doc_id: int,
-    request: AskRequest,
+    question_data: AskRequest,
     current_user: User = Depends(get_current_user_or_dev_user)  # DEV MODE ONLY - Change back to get_current_user for production
 ) -> AskResponse:
     """
@@ -187,7 +187,7 @@ async def ask_question(
         HTTPException: If validation fails or processing errors occur
     """
     user_id = current_user.id
-    question = request.question.strip()
+    question = question_data.question.strip()
     
     logger.info(f"Question for doc {doc_id} by user {user_id}: {question[:100]}...")
     
