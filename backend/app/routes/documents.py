@@ -6,7 +6,7 @@ Document management routes: upload, retrieval, and processing.
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Request
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -37,6 +37,7 @@ ALLOWED_EXTENSIONS = {".pdf", ".docx", ".txt"}
 @router.post("/upload", response_model=DocumentUploadFullResponse, status_code=status.HTTP_201_CREATED)
 @limiter.limit("20/hour")  # 20 uploads per hour
 async def upload_document(
+    request: Request,
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_user_or_dev_user),  # DEV MODE ONLY - Change back to get_current_user for production
     db: Session = Depends(get_db)

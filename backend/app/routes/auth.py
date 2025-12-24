@@ -6,7 +6,7 @@ Authentication routes: signup, login, and user info.
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
@@ -26,6 +26,7 @@ limiter = Limiter(key_func=get_remote_address)
 @router.post("/signup", response_model=UserRead, status_code=status.HTTP_201_CREATED)
 @limiter.limit("5/hour")  # 5 signups per hour per IP
 async def signup(
+    request: Request,
     user_data: UserCreate,
     db: Annotated[Session, Depends(get_db)]
 ):
@@ -69,6 +70,7 @@ async def signup(
 @router.post("/login", response_model=Token)
 @limiter.limit("10/minute")  # 10 login attempts per minute
 async def login(
+    request: Request,
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     db: Annotated[Session, Depends(get_db)]
 ):

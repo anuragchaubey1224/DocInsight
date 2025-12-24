@@ -15,7 +15,7 @@ Provides POST /ask/{doc_id} endpoint with:
 import logging
 from typing import Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from pydantic import BaseModel, Field
 
 from app.core.config import get_settings
@@ -157,6 +157,7 @@ class AskResponse(BaseModel):
 @router.post("/ask/{doc_id}", response_model=AskResponse)
 @limiter.limit("50/hour")  # 50 questions per hour
 async def ask_question(
+    http_request: Request,
     doc_id: int,
     request: AskRequest,
     current_user: User = Depends(get_current_user_or_dev_user)  # DEV MODE ONLY - Change back to get_current_user for production

@@ -11,7 +11,7 @@ Design principles:
 - Clear error messages
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 import logging
 import gc
@@ -40,6 +40,7 @@ limiter = Limiter(key_func=get_remote_address)
 @router.post("/{doc_id}", response_model=DocumentSummaryResponse)
 @limiter.limit("30/hour")  # 30 summarizations per hour
 def summarize_document(
+    request: Request,
     doc_id: int,
     current_user: User = Depends(get_current_user_or_dev_user),  # DEV MODE ONLY - Change back to get_current_user for production
     db: Session = Depends(get_db)
